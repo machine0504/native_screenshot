@@ -181,7 +181,7 @@ fn process_outcome(outcome: Outcome) -> Result<Option<std::path::PathBuf>> {
 
             // 「√ 确认」：写临时 PNG 供宿主读取并插入提问框。
             let path = std::env::temp_dir().join(format!(
-                "lzccb_snip_{}.png",
+                "screenshot_{}.png",
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map(|d| d.as_millis())
