@@ -1,0 +1,5 @@
+# Optional. Uncomment to use a mirror.
+# [source.crates-io]
+# replace-with = "mirror"
+# [source.mirror]
+# registry = "sparse+https://example.com/index/"

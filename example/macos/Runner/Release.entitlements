@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 关闭 App Sandbox：截图 helper 以子进程方式访问整屏，沙箱会限制（与主项目一致）。
+	     （同进程 FFI 路径在 macOS 上不可用：winit 会嵌套 [NSApp run] 与 Flutter 冲突崩溃。） -->
+	<key>com.apple.security.device.screen-capture</key>
+	<true/>
+	<key>com.apple.security.temporary-exception.mach-register.global-name</key>
+	<string>com.apple.screencapture.interactive</string>
+	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+	<array>
+		<string>com.apple.screencapture.interactive</string>
+	</array>
+</dict>
+</plist>

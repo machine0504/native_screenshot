@@ -1,0 +1,94 @@
+[package]
+name = "rust_screenshot"
+version = "0.2.0"
+edition = "2021"
+description = "Cross-platform Snipaste-style screenshot helper (winit + tiny-skia) for Flutter"
+authors = ["machine0504"]
+license = "MIT"
+
+# Built as a standalone helper executable that the Flutter app launches.
+# It owns its own process / main thread, which is required for a GUI event
+# loop on macOS and avoids any conflict with Flutter's own run loop.
+[[bin]]
+name = "rust_screenshot"
+path = "src/main.rs"
+
+[dependencies]
+# Cross-platform windowing + input + IME
+winit = "0.30"
+# Present a CPU framebuffer to a winit window
+softbuffer = "0.4"
+raw-window-handle = "0.6"
+# High-quality anti-aliased 2D rasterizer (the whole overlay UI)
+tiny-skia = "0.11"
+# Glyph outlines for crisp text (labels, serial badges, text tool)
+ab_glyph = "0.2"
+# Image encode/decode. PNG is our own output format; JPEG is required to decode
+# what the Linux XDG desktop portal returns — some backends (e.g. Deepin/UOS's
+# xdg-desktop-portal-dde) hand back a JPEG screenshot, not a PNG.
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+# System clipboard (image support)
+arboard = "3"
+# Native save dialog
+rfd = "0.15"
+# Logging + errors
+log = "0.4"
+env_logger = "0.11"
+thiserror = "1.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Graphics_Dwm",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_HiDpi",
+] }
+
+# macOS / Linux screen capture (Windows uses the windows crate directly).
+# xcap >= 0.1 exposes Result-returning monitor accessors (x()/y()/width()/...).
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+xcap = "0.3"
+
+# Linux: xcap only implements the X11 screen-capture backend, which fails under
+# a Wayland session (the app runs on XWayland, whose rootless root window
+# rejects XGetImage). Fall back to the XDG desktop portal
+# (org.freedesktop.portal.Screenshot), which the compositor implements — this is
+# the only portable Wayland path (Deepin/UOS, GNOME, KDE, …). ashpd + pollster
+# are already resolved via rfd's save dialog, so this reuses the same
+# async-portal + block_on mechanism without adding new transitive deps; keep
+# ashpd's feature set aligned with rfd (default-features off).
+[target.'cfg(target_os = "linux")'.dependencies]
+ashpd = { version = "0.11", default-features = false }
+pollster = "0.4"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSWindow"] }
+objc2-core-graphics = { version = "0.3", features = ["CGWindow"] }
+objc2-core-foundation = "0.3"
+objc2-foundation = "0.3"
+# GPU present path (raw Metal): uploads only the damaged region each frame and
+# blits, instead of softbuffer's full-framebuffer re-upload (which ignores damage
+# on macOS and causes high-refresh stutter). softbuffer remains a fallback. These
+# objc2 crates are already pulled transitively, so no new heavy dependencies.
+objc2-metal = { version = "0.3", features = [
+    "MTLDevice",
+    "MTLCommandQueue",
+    "MTLCommandBuffer",
+    "MTLCommandEncoder",
+    "MTLBlitCommandEncoder",
+    "MTLTexture",
+    "MTLResource",
+    "MTLPixelFormat",
+    "MTLDrawable",
+    "MTLTypes",
+] }
+objc2-quartz-core = { version = "0.3", features = ["CAMetalLayer", "CALayer", "objc2-metal"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

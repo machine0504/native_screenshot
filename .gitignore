@@ -1,0 +1,16 @@
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.idea/
+*.iml
+.DS_Store
+**/Pods/
+**/ephemeral/
+**/Flutter/ephemeral/
+target/
+
+**/local.properties
+**/Generated.xcconfig
+**/flutter_export_environment.sh

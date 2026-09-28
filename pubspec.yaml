@@ -1,0 +1,38 @@
+name: native_screenshot
+description: Snipaste-style native screenshot plugin with frozen-snapshot region selection, magnifier, color readout and annotation tools for Windows, macOS and Linux.
+version: 2.0.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # 截图前置逻辑统一在插件内完成，宿主 App 调用方无需关心：
+  #  - screen_capturer：macOS 截图前的「屏幕录制」权限检查 / 申请；
+  #  - window_manager：截图时最小化 / 恢复宿主窗口。
+  screen_capturer: ^0.2.0
+  window_manager: '>=0.4.0 <0.6.0'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+# Flutter plugin：跨平台截图 UI 由随包分发的 Rust helper（rust_screenshot，源码在本插件
+# rust_screenshot/ 子目录，winit + tiny-skia）提供，Dart 侧以子进程方式启动它。
+#
+#  - Linux / Windows：本插件的 CMakeLists 会被宿主 App 的构建自动接管（Flutter 的
+#    generated_plugins.cmake 负责 add_subdirectory），在里面 `cargo build --release`
+#    并把 helper 拷到 App 同目录 —— 宿主 App **零配置**。
+#  - macOS：CocoaPods 无法把「可执行文件」放进 App.app/Contents/MacOS（这是 helper 复用
+#    宿主身份、只占一个屏幕录制权限的关键），故由宿主 App 保留一个构建脚本阶段，指向本插件
+#    macos/scripts/embed_rust_screenshot.sh 完成 cargo 构建 + 嵌入 + 签名。
+flutter:
+  plugin:
+    platforms:
+      linux:
+        ffiPlugin: true
+      windows:
+        ffiPlugin: true
